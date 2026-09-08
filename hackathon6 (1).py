@@ -11,7 +11,7 @@ from PIL import Image, ImageTk
 
 # Voice Output & Input Libraries
 from gtts import gTTS
-from playsound import playsound
+from playsound3 import playsound
 import speech_recognition as sr
 
 # ============================================================
