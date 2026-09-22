@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Avenir - Voice Interactive Companion</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#1e1e2e;color:#cdd6f4}
+nav{background:#11111b;padding:12px 18px;display:flex;align-items:center;gap:14px;position:sticky;top:0}
+nav b{color:#89b4fa;font-size:21px}nav select{margin-left:auto;background:#313244;color:#fff;border:0;padding:8px;border-radius:7px}
+main{max-width:1100px;margin:auto;padding:22px}.hero{text-align:center}.hero h1{color:#89b4fa}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px}
+.card,.chat,.form,.game{background:#181825;border:1px solid #313244;border-radius:12px;padding:18px}
+button{border:0;border-radius:7px;padding:10px 14px;font-weight:bold;cursor:pointer;background:#89b4fa;color:#11111b;margin:4px}
+.secondary{background:#313244;color:#cdd6f4}.messages{height:420px;overflow:auto;background:#11111b;padding:12px;border-radius:8px}
+.msg{padding:9px 12px;margin:7px 0;border-radius:8px;white-space:pre-wrap}.you{background:#89b4fa;color:#11111b;margin-left:20%}.ai{background:#313244;margin-right:20%}
+.chatbar{display:flex;margin-top:10px;gap:6px}.chatbar input{flex:1;padding:11px;background:#313244;border:1px solid #45475a;color:#fff;border-radius:7px}
+label{display:block;margin-top:10px;margin-bottom:4px;font-weight:bold}.form input,.form select,.form textarea{width:100%;padding:10px;border-radius:6px;border:1px solid #aaa}.form textarea{min-height:80px}
+.memoryGrid{display:grid;grid-template-columns:repeat(4,80px);gap:8px;justify-content:center}.memoryGrid button{height:80px;font-size:28px;padding:0;background:#313244;color:#fff}
+.colorGrid{display:grid;grid-template-columns:repeat(2,130px);gap:12px;justify-content:center}.colorGrid button{height:90px}.red{background:#f38ba8}.green{background:#a6e3a1}.blue{background:#89b4fa}.yellow{background:#f9e2af}
+@media(max-width:600px){.you{margin-left:5%}.ai{margin-right:5%}.memoryGrid{grid-template-columns:repeat(4,60px)}.memoryGrid button{height:60px}.colorGrid{grid-template-columns:repeat(2,110px)}}
+</style>
+</head>
+<body>
+<nav><button class="secondary" onclick="home()">🏠 Home</button><b>Avenir</b><select id="lang" onchange="setLang(this.value)"><option value="en">English</option><option value="hi">Hindi</option><option value="bn">Bengali</option><option value="ne">Nepali</option><option value="as">Assamese</option></select></nav>
+<div id="app"></div>
+<script>
+let language="en", score=0, sequence=[], user=[], first=null, matches=0;
+const T={
+en:{hello:"Hello! I am your granddaughter. I am here to talk with you!",food:"Did you have your meal today? Please remember to eat on time.",med:"It is time for your medicine. Please take it as prescribed.",game:"Let's play a fun memory game together!",default:"I am listening. Tell me more!"},
+hi:{hello:"नमस्ते! मैं आपकी पोती हूँ। आपसे बात करने आई हूँ!",food:"क्या आपने खाना खा लिया? समय पर खाना जरूर खाइए।",med:"दवाई लेने का समय है। कृपया अपनी दवा समय पर लें।",game:"चलिए एक मज़ेदार मेमोरी गेम खेलते हैं!",default:"मैं आपकी बात सुन रही हूँ। मुझे और बताइए!"},
+bn:{hello:"নমস্কার! আমি আপনার নাতনি। আপনার সাথে কথা বলতে এসেছি!",food:"আপনি কি খাবার খেয়েছেন? সময়মতো খাবার খান।",med:"ওষুধ খাওয়ার সময় হয়েছে।",game:"চলুন একটি মজার মেমোরি গেম খেলি!",default:"আমি আপনার কথা শুনছি। আরও বলুন!"},
+ne:{hello:"नमस्ते! म तपाइँको नातिनी हुँ। तपाइँसँग कुरा गर्न आएको छु!",food:"के तपाइँले खाना खानुभयो? समयमा खानुहोस्।",med:"औषधि खाने समय भयो।",game:"आउनुहोस् रमाइलो मेमोरी खेल खेलौं!",default:"म तपाइँको कुरा सुन्दैछु। अझ भन्नुहोस्!"},
+as:{hello:"নমস্কাৰ! মই আপোনাৰ নাতিনী। আপোনাৰ লগত কথা পাতিবলৈ আহিছোঁ!",food:"আপুনি আহাৰ খালেনে? সময়মতে খাব।",med:"দৱাই খোৱাৰ সময় হৈছে।",game:"আহক এটা মজাৰ মেমৰি গেম খেলোঁ!",default:"মই আপোনাৰ কথা শুনি আছোঁ। আৰু কওক!"}
+};
+function setLang(x){language=x;home()}
+function speak(s){if(window.speechSynthesis){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(s))}}
+function answer(m){let t=T[language],x=m.toLowerCase();if(/hello|hi|hey|namaste|নমস্কার|নমস্কাৰ/.test(x))return t.hello;if(/food|eat|breakfast|lunch|dinner|খাবার|খানা/.test(x))return t.food;if(/medicine|pill|tablet|medicine|দওয়া|दवाई/.test(x))return t.med;if(/game|play|খেলা|खेल/.test(x))return t.game;return t.default}
+function home(){app.innerHTML=`<main><section class="hero"><h1>👵 Voice Interactive Companion & Brain Suite 🧠</h1><p>Avenir web version — ready for Vercel.</p></section><div class="grid">
+<div class="card"><h2>🗣️ Voice AI</h2><p>Chat by text or microphone.</p><button onclick="chat()">Open Voice AI</button></div>
+<div class="card"><h2>🌿 Memory Garden</h2><p>Create a patient and family profile in your browser.</p><button onclick="garden()">Launch Setup</button></div>
+<div class="card"><h2>🖼️ Photo Matching</h2><p>Match pairs to exercise memory.</p><button onclick="photoGame()">Play Grid</button></div>
+<div class="card"><h2>⚡ Color Memory Rush</h2><p>Remember the color sequence.</p><button onclick="colorGame()">Play Color Rush</button></div>
+</div></main>`}
+function chat(){app.innerHTML=`<main><div class="chat"><h2>🗣️ Voice AI Granddaughter</h2><div id="messages" class="messages"></div><div class="chatbar"><button onclick="listen()">🎤 Speak</button><input id="input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')send()"><button onclick="send()">Send</button></div></div></main>`;add("AI",T[language].hello)}
+function add(w,m){document.getElementById("messages").insertAdjacentHTML("beforeend",`<div class="msg ${w==="You"?"you":"ai"}"><b>${w}:</b> ${esc(m)}</div>`);document.getElementById("messages").scrollTop=99999}
+function esc(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function send(){let i=document.getElementById("input"),m=i.value.trim();if(!m)return;add("You",m);i.value="";let r=answer(m);setTimeout(()=>{add("AI",r);speak(r)},100)}
+function listen(){let R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R)return alert("Voice recognition is not supported here. Try Chrome.");let r=new R();r.lang=language==="en"?"en-IN":language==="hi"?"hi-IN":language==="bn"?"bn-IN":language==="ne"?"ne-NP":"as-IN";r.onresult=e=>{document.getElementById("input").value=e.results[0][0].transcript;send()};r.start()}
+function garden(){app.innerHTML=`<main><div class="form"><h2>🌿 Memory Garden Setup</h2><label>Guardian / User Name</label><input id="g"><label>Relationship to Patient</label><input id="rel"><label>Contact</label><input id="con"><label>Patient Name</label><input id="p"><label>Patient Age</label><input id="age" type="number"><label>Memory Condition</label><select id="diff"><option>Better</option><option>Intermediate</option><option>Difficult</option></select><label>Village / Town</label><input id="town"><label>Personal Story</label><textarea id="story"></textarea><br><button onclick="saveGarden()">✓ Save Profile</button><button class="secondary" onclick="home()">Back</button></div></main>`}
+function saveGarden(){let p={guardian:document.getElementById("g").value,relationship:document.getElementById("rel").value,contact:document.getElementById("con").value,patient:document.getElementById("p").value,age:document.getElementById("age").value,condition:document.getElementById("diff").value,town:document.getElementById("town").value,story:document.getElementById("story").value};localStorage.setItem("avenirProfile",JSON.stringify(p));alert("Profile saved in this browser.");home()}
+const symbols=["🐶","🐱","🦊","🐼","🐸","🐵","🦁","🐰"];
+function photoGame(){let deck=[...symbols,...symbols].sort(()=>Math.random()-.5);first=null;matches=0;app.innerHTML=`<main><div class="game"><h2>🖼️ Photo / Memory Matching</h2><p>Match all pairs.</p><div id="memory" class="memoryGrid">${deck.map((x,i)=>`<button onclick="flip(${i})" data-i="${i}" data-v="${x}">?</button>`).join("")}</div><br><button class="secondary" onclick="photoGame()">Restart</button></div></main>`}
+function flip(i){let b=[...document.querySelectorAll("#memory button")],x=b[i];if(x.textContent!=="?"||first===i)return;x.textContent=x.dataset.v;if(first===null){first=i;return}let a=b[first];if(a.dataset.v===x.dataset.v){a.style.background="#a6e3a1";x.style.background="#a6e3a1";matches++;first=null;if(matches===8)setTimeout(()=>alert("🎉 All pairs matched!"),200)}else{let old=first;first=null;setTimeout(()=>{b[old].textContent="?";x.textContent="?"},600)}}
+const colors=["red","green","blue","yellow"];function colorGame(){score=0;sequence=[];user=[];app.innerHTML=`<main><div class="game" style="text-align:center"><h2>⚡ Color Memory Rush</h2><h3 id="cs">Score: 0</h3><p id="status">Press Start</p><div class="colorGrid">${colors.map(c=>`<button class="${c}" onclick="pick('${c}')">${c.toUpperCase()}</button>`).join("")}</div><button onclick="startColor()">START GAME</button></div></main>`}
+function startColor(){score=0;sequence=[];nextRound()}
+function nextRound(){user=[];sequence.push(colors[Math.floor(Math.random()*4)]);document.getElementById("status").textContent="Watch the sequence...";let i=0;let timer=setInterval(()=>{if(i>=sequence.length){clearInterval(timer);document.getElementById("status").textContent="Your turn!";return}let b=document.querySelector("."+sequence[i]);b.style.filter="brightness(1.8)";setTimeout(()=>b.style.filter="",250);i++},500)}
+function pick(c){if(!sequence.length)return;user.push(c);let i=user.length-1;if(c!==sequence[i]){alert("Game over! Score: "+score);sequence=[];return}if(user.length===sequence.length){score+=10;document.getElementById("cs").textContent="Score: "+score;if(score>=100){alert("🎉 You reached 100 points!");sequence=[]}else setTimeout(nextRound,500)}}
+home();
+</script>
+</body></html>
